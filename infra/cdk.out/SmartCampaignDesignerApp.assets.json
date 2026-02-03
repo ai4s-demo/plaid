@@ -1,0 +1,97 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6": {
+      "displayName": "SmartCampaignDesignerApp/Custom::S3AutoDeleteObjectsCustomResourceProvider Code",
+      "source": {
+        "path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "034362076319-us-east-1-b10bdfd9": {
+          "bucketName": "cdk-hnb659fds-assets-034362076319-us-east-1",
+          "objectKey": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::034362076319:role/cdk-hnb659fds-file-publishing-role-034362076319-us-east-1"
+        }
+      }
+    },
+    "0cfdecad2260a3a84ad0c2d08a77e03c9d25e26c7b52f26b1e1faf97aef92f18": {
+      "displayName": "DeployFrontend/AwsCliLayer/Code",
+      "source": {
+        "path": "asset.0cfdecad2260a3a84ad0c2d08a77e03c9d25e26c7b52f26b1e1faf97aef92f18.zip",
+        "packaging": "file"
+      },
+      "destinations": {
+        "034362076319-us-east-1-ce6bea55": {
+          "bucketName": "cdk-hnb659fds-assets-034362076319-us-east-1",
+          "objectKey": "0cfdecad2260a3a84ad0c2d08a77e03c9d25e26c7b52f26b1e1faf97aef92f18.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::034362076319:role/cdk-hnb659fds-file-publishing-role-034362076319-us-east-1"
+        }
+      }
+    },
+    "3423a042b818e31c1e34a19d6689ab2e5f9b70fcbe9e71df66f241b20a200bd9": {
+      "displayName": "Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Code",
+      "source": {
+        "path": "asset.3423a042b818e31c1e34a19d6689ab2e5f9b70fcbe9e71df66f241b20a200bd9",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "034362076319-us-east-1-38d24256": {
+          "bucketName": "cdk-hnb659fds-assets-034362076319-us-east-1",
+          "objectKey": "3423a042b818e31c1e34a19d6689ab2e5f9b70fcbe9e71df66f241b20a200bd9.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::034362076319:role/cdk-hnb659fds-file-publishing-role-034362076319-us-east-1"
+        }
+      }
+    },
+    "ddd1928d59ddd885e5f6429c0f83739ad5f5116b4856e41222ae1e38b0844583": {
+      "displayName": "DeployFrontend/Asset1",
+      "source": {
+        "path": "asset.ddd1928d59ddd885e5f6429c0f83739ad5f5116b4856e41222ae1e38b0844583",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "034362076319-us-east-1-602335d6": {
+          "bucketName": "cdk-hnb659fds-assets-034362076319-us-east-1",
+          "objectKey": "ddd1928d59ddd885e5f6429c0f83739ad5f5116b4856e41222ae1e38b0844583.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::034362076319:role/cdk-hnb659fds-file-publishing-role-034362076319-us-east-1"
+        }
+      }
+    },
+    "dd91e5873ebc2336a7dcb1d0d6b9fa06bac7b14f1b5974b7af41c48f89d64bbc": {
+      "displayName": "SmartCampaignDesignerApp Template",
+      "source": {
+        "path": "SmartCampaignDesignerApp.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "034362076319-us-east-1-e94f14c4": {
+          "bucketName": "cdk-hnb659fds-assets-034362076319-us-east-1",
+          "objectKey": "dd91e5873ebc2336a7dcb1d0d6b9fa06bac7b14f1b5974b7af41c48f89d64bbc.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::034362076319:role/cdk-hnb659fds-file-publishing-role-034362076319-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {
+    "211511c319a58295bd5c25c9f2d1448c1635702b9442c7d0b519b970fd8f70db": {
+      "displayName": "BackendImage",
+      "source": {
+        "directory": "asset.211511c319a58295bd5c25c9f2d1448c1635702b9442c7d0b519b970fd8f70db",
+        "platform": "linux/amd64"
+      },
+      "destinations": {
+        "034362076319-us-east-1-7eb6a021": {
+          "repositoryName": "cdk-hnb659fds-container-assets-034362076319-us-east-1",
+          "imageTag": "211511c319a58295bd5c25c9f2d1448c1635702b9442c7d0b519b970fd8f70db",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::034362076319:role/cdk-hnb659fds-image-publishing-role-034362076319-us-east-1"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "ed11509a01c2c09c8a5ff647aca89a9920a964d89806cec23adda8425e3e6a8e": {
+      "displayName": "SmartCampaignDesignerAuth Template",
+      "source": {
+        "path": "SmartCampaignDesignerAuth.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "034362076319-us-east-1-17f7214b": {
+          "bucketName": "cdk-hnb659fds-assets-034362076319-us-east-1",
+          "objectKey": "ed11509a01c2c09c8a5ff647aca89a9920a964d89806cec23adda8425e3e6a8e.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::034362076319:role/cdk-hnb659fds-file-publishing-role-034362076319-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

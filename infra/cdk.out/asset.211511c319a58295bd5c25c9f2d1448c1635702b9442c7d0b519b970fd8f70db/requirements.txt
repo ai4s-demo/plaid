@@ -1,0 +1,30 @@
+# Smart Campaign Designer - Backend Dependencies
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# AWS
+boto3==1.34.0
+
+# Constraint Solver
+ortools==9.8.3296
+
+# Data Processing
+pandas==2.1.4
+openpyxl==3.1.2
+
+# Validation
+pydantic>=2.7.0
+pydantic-settings>=2.0.0
+
+# SSE Support
+sse-starlette==1.8.2
+
+# CORS
+starlette==0.35.1
+
+# JWT Authentication
+python-jose[cryptography]==3.3.0
+httpx==0.26.0
