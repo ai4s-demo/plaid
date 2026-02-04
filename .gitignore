@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Build outputs
+frontend/dist/
+infra/cdk.out/
+infra/lambda_layer/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+frontend/.env
+backend/.env
+
+# CDK outputs
+cdk-outputs.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Misc
+*.pdf
