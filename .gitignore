@@ -4,6 +4,7 @@ venv/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
 
 # Build outputs
 frontend/dist/
@@ -12,10 +13,8 @@ infra/lambda_layer/
 
 # Environment files
 .env
-.env.local
-.env.*.local
-frontend/.env
-backend/.env
+.env.*
+!.env.example
 
 # CDK outputs
 cdk-outputs.json
@@ -39,5 +38,5 @@ npm-debug.log*
 .coverage
 htmlcov/
 
-# Misc
+# Binary / generated
 *.pdf
