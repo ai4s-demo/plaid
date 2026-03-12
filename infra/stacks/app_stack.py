@@ -158,7 +158,7 @@ class AppStack(Stack):
             f" -e COGNITO_APP_CLIENT_ID={cognito_app_client_id}"
             f" -e COGNITO_REGION={self.region}"
             f" -e AWS_REGION={self.region}"
-            f' -e BEDROCK_MODEL_ID="anthropic.claude-3-sonnet-20240229-v1:0"'
+            f' -e BEDROCK_MODEL_ID="us.anthropic.claude-opus-4-6-v1:0"'
             f" -e SOLVER_TIMEOUT_SECONDS=180"
             f" {image_uri}",
             "",
@@ -278,7 +278,7 @@ class AppStack(Stack):
                         origin_domain,
                         http_port=8000,
                         protocol_policy=cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-                        read_timeout=Duration.seconds(180),
+                        read_timeout=Duration.seconds(60),
                     ),
                     viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
                     allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,

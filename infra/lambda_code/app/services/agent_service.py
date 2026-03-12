@@ -165,15 +165,56 @@ class AgentService:
         
         return None
     
+    # Chinese numeral mapping
+    _CN_NUM = {'一': 1, '二': 2, '两': 2, '三': 3, '四': 4, '五': 5}
+
+    def apply_explicit_overrides(self, params: DesignParameters, message: str) -> None:
+        """Override AI-extracted params with explicitly stated values from user message.
+
+        Only fires when the user's text contains an unambiguous explicit mention.
+        """
+        text = message.lower()
+
+        # Plate type override — only when user explicitly mentions plate/孔/板
+        plate_keywords = ('孔', 'plate', 'well', '板')
+        if '1536' in text and any(k in text for k in plate_keywords):
+            params.plate_type = PlateType.PLATE_1536
+        elif '384' in text and any(k in text for k in plate_keywords):
+            params.plate_type = PlateType.PLATE_384
+        elif '96' in text and any(k in text for k in plate_keywords):
+            params.plate_type = PlateType.PLATE_96
+
+        # Edge layers override — Arabic digits
+        edge_patterns = [
+            r'(?:边缘|外围|外圈|edge)\s*(?:空白|留空|empty)?\s*(\d+)\s*(?:层|圈|layer)',
+            r'(\d+)\s*(?:层|圈|layer)\s*(?:边缘|外围|外圈|edge|留空)',
+            r'leave\s+(\d+)\s+(?:outer\s+)?layer',
+            r'(?:最外面|外面)\s*(\d+)\s*(?:层|圈)',
+        ]
+        for pattern in edge_patterns:
+            match = re.search(pattern, text)
+            if match:
+                params.edge_empty_layers = int(match.group(1))
+                return
+
+        # Edge layers override — Chinese numerals (一圈/两层/三圈 etc.)
+        cn_edge_pattern = r'(?:边缘|外围|外圈|外面|最外面)?\s*([一二两三四五])\s*(?:层|圈)\s*(?:留空|空白|edge)?'
+        match = re.search(cn_edge_pattern, message)  # use original case for Chinese
+        if match:
+            cn_char = match.group(1)
+            if cn_char in self._CN_NUM:
+                params.edge_empty_layers = self._CN_NUM[cn_char]
+
     def build_params_from_ai_result(
         self,
         ai_params: Dict,
-        available_genes: List[str]
+        available_genes: List[str],
+        user_message: str = "",
     ) -> tuple:
         """Convert AI extracted params to DesignParameters and gene list."""
-        
+
         params = DesignParameters.default()
-        
+
         # 板类型
         plate_type = ai_params.get('plate_type', 96)
         if plate_type == 384:
@@ -182,10 +223,10 @@ class AgentService:
             params.plate_type = PlateType.PLATE_1536
         else:
             params.plate_type = PlateType.PLATE_96
-        
+
         # 默认重复数
         params.replicates = ai_params.get('default_replicates', 6)
-        
+
         # 边缘层数
         params.edge_empty_layers = ai_params.get('edge_empty_layers', 1)
         
@@ -234,8 +275,12 @@ class AgentService:
                         transfer_volume=config.get('transfer_volume_nl', params.transfer_volume)
                     )
         
+        # Safety net: override with explicitly stated values from the user's text
+        if user_message:
+            self.apply_explicit_overrides(params, user_message)
+
         return params, selected_genes
-    
+
     async def chat(
         self,
         message: str,
