@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     cognito_app_client_id: Optional[str] = None
     
     # Solver
-    solver_timeout_seconds: int = 30
+    solver_timeout_seconds: int = 180
     
     # File Upload
     max_file_size_mb: int = 10
