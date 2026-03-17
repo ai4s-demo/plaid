@@ -443,17 +443,29 @@ class AgentService:
                 params.replicates = int(match.group(1))
                 break
         
-        # Extract edge empty
+        # Extract edge empty — Arabic digits
         edge_patterns = [
-            r'(?:边缘|外圈|edge)\s*(?:空白|留空|empty)?\s*(\d+)\s*(?:层|layer)?',
-            r'(\d+)\s*(?:层|layer)\s*(?:边缘|外圈|edge)',
+            r'(?:边缘|外围|外圈|edge)\s*(?:空白|留空|empty)?\s*(\d+)\s*(?:层|圈|layer)?',
+            r'(\d+)\s*(?:层|圈|layer)\s*(?:边缘|外围|外圈|edge|留空)',
             r'leave\s+(\d+)\s+(?:outer\s+)?layer',
+            r'(?:最外面|外面)\s*(\d+)\s*(?:层|圈)',
         ]
+        edge_found = False
         for pattern in edge_patterns:
             match = re.search(pattern, text)
             if match:
                 params.edge_empty_layers = int(match.group(1))
+                edge_found = True
                 break
+
+        # Extract edge empty — Chinese numerals (两层/两圈 etc.)
+        if not edge_found:
+            cn_edge_pattern = r'(?:边缘|外围|外圈|外面|最外面)?\s*([一二两三四五])\s*(?:层|圈)\s*(?:留空|空白|edge)?'
+            match = re.search(cn_edge_pattern, message)
+            if match:
+                cn_char = match.group(1)
+                if cn_char in self._CN_NUM:
+                    params.edge_empty_layers = self._CN_NUM[cn_char]
         
         # Check for "外圈留空" without number
         if "外圈留空" in text or "边缘留空" in text or "leave outer" in text:

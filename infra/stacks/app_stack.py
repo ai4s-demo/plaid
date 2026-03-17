@@ -158,8 +158,8 @@ class AppStack(Stack):
             f" -e COGNITO_APP_CLIENT_ID={cognito_app_client_id}"
             f" -e COGNITO_REGION={self.region}"
             f" -e AWS_REGION={self.region}"
-            f' -e BEDROCK_MODEL_ID="us.anthropic.claude-opus-4-6-v1:0"'
-            f" -e SOLVER_TIMEOUT_SECONDS=180"
+            f' -e BEDROCK_MODEL_ID="us.anthropic.claude-sonnet-4-6-v1:0"'
+            f" -e SOLVER_TIMEOUT_SECONDS=30"
             f" {image_uri}",
             "",
             "# Health check: wait for container to respond",

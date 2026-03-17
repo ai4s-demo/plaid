@@ -12,10 +12,10 @@ import type { PlateLayout, LayoutWell } from '../types';
 interface PlateViewProps {
   layout: PlateLayout | null;
   onLayoutChange: (layout: PlateLayout) => void;
-  compact?: boolean;  // 紧凑模式，用于聊天内嵌显示
+  compact?: boolean;  // Compact mode for inline chat display
 }
 
-// 颜色映射
+// Color mapping
 const WELL_COLORS: Record<string, string> = {
   empty: '#f5f5f5',
   edge: '#e0e0e0',
@@ -26,7 +26,7 @@ const WELL_COLORS: Record<string, string> = {
   sample: '#2196f3',
 };
 
-// 预定义高区分度颜色调色板
+// Predefined high-contrast color palette
 const GENE_PALETTE = [
   '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
   '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
@@ -36,11 +36,11 @@ const GENE_PALETTE = [
   '#955251', '#b565a7', '#009b77', '#dd4124', '#45b8ac',
 ];
 
-// 基因颜色生成 - 使用预定义调色板确保高区分度
+// Gene color generation - using predefined palette for high contrast
 function getGeneColor(geneId: string, allGeneIds: string[]): string {
-  // 按字母排序后找到索引，确保稳定性
+  // Sort alphabetically to find index, ensuring stability
   const sortedGenes = [...allGeneIds].sort((a, b) => {
-    // 自然排序：Gene1, Gene2, ..., Gene10, Gene11
+    // Natural sort: Gene1, Gene2, ..., Gene10, Gene11
     const numA = parseInt(a.replace(/\D/g, '')) || 0;
     const numB = parseInt(b.replace(/\D/g, '')) || 0;
     if (numA !== numB) return numA - numB;
@@ -51,7 +51,7 @@ function getGeneColor(geneId: string, allGeneIds: string[]): string {
   return GENE_PALETTE[index % GENE_PALETTE.length];
 }
 
-// 单个孔位组件
+// Single well component
 function Well({
   well,
   allGeneIds,
@@ -81,11 +81,11 @@ function Well({
   });
 
   const color = useMemo(() => {
-    // 样本类型且有基因ID时，使用基因特定颜色
+    // Use gene-specific color for sample wells with a gene ID
     if (well.wellType === 'sample' && well.geneId) {
       return getGeneColor(well.geneId, allGeneIds);
     }
-    // 其他类型使用预定义颜色
+    // Use predefined colors for other types
     return WELL_COLORS[well.wellType] || WELL_COLORS.empty;
   }, [well.wellType, well.geneId, allGeneIds]);
 
@@ -139,14 +139,14 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
 
   const { rows, cols, geneIds } = useMemo(() => {
     if (!layout) return { rows: 8, cols: 12, geneIds: [] };
-    // 根据板类型设置行列数
-    let r = 8, c = 12;  // 96孔板默认
+    // Set rows and columns based on plate type
+    let r = 8, c = 12;  // 96-well default
     if (layout.plateFormat === 384) {
       r = 16; c = 24;
     } else if (layout.plateFormat === 1536) {
       r = 32; c = 48;
     }
-    // 获取唯一基因并使用自然排序
+    // Get unique genes and apply natural sort
     const ids = [...new Set(layout.wells.filter((w) => w.geneId).map((w) => w.geneId!))];
     ids.sort((a, b) => {
       const numA = parseInt(a.replace(/\D/g, '')) || 0;
@@ -177,10 +177,10 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
       if (!sourceWell || !targetWell) return;
       if (targetWell.wellType === 'edge') return;
 
-      // 交换两个孔位的内容
+      // Swap contents of two wells
       const newWells = layout.wells.map((w) => {
         if (w.wellId === sourceWellId) {
-          // 源孔获得目标孔的内容
+          // Source well gets target well's content
           return {
             ...w,
             geneId: targetWell.geneId,
@@ -190,7 +190,7 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
           } as LayoutWell;
         }
         if (w.wellId === targetWellId) {
-          // 目标孔获得源孔的内容
+          // Target well gets source well's content
           return {
             ...w,
             geneId: sourceWell.geneId,
@@ -212,16 +212,16 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
       <div className="plate-view empty">
         <div className="plate-placeholder">
           <span>🧫</span>
-          <p>布局将在这里显示</p>
+          <p>Layout will be displayed here</p>
         </div>
       </div>
     );
   }
 
-  // 紧凑模式使用更小的尺寸
+  // Compact mode uses smaller dimensions
   const sizeMultiplier = compact ? 0.5 : 1;
   
-  // 根据板类型调整间距
+  // Adjust spacing based on plate type
   const baseCellSize = layout.plateFormat === 384 ? 28 : layout.plateFormat === 1536 ? 14 : 40;
   const baseWellRadius = layout.plateFormat === 384 ? 11 : layout.plateFormat === 1536 ? 5 : 16;
   const baseFontSize = layout.plateFormat === 384 ? 6 : layout.plateFormat === 1536 ? 4 : 8;
@@ -229,7 +229,7 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
   
   const cellSize = baseCellSize * sizeMultiplier;
   const wellRadius = baseWellRadius * sizeMultiplier;
-  const fontSize = compact ? 0 : baseFontSize;  // 紧凑模式不显示文字
+  const fontSize = compact ? 0 : baseFontSize;  // No text in compact mode
   const labelOffset = baseLabelOffset * sizeMultiplier;
   
   const width = cols * cellSize + labelOffset * 2 + 20;
@@ -240,16 +240,16 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
     <div className={`plate-view ${compact ? 'compact' : ''}`}>
       {!compact && (
         <div className="plate-header">
-          <h3>🧫 板布局</h3>
+          <h3>🧫 Plate Layout</h3>
           <span className="plate-info">
-            {layout.plateFormat}孔板 | 得分: {layout.score.toFixed(2)}
+            {layout.plateFormat}-Well Plate | Score: {layout.score.toFixed(2)}
           </span>
         </div>
       )}
 
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <svg width={width} height={height} className="plate-svg">
-          {/* 行标签 */}
+          {/* Row labels */}
           {!compact && Array.from({ length: rows }, (_, i) => (
             <text 
               key={`row-${i}`} 
@@ -262,7 +262,7 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
             </text>
           ))}
 
-          {/* 列标签 */}
+          {/* Column labels */}
           {!compact && Array.from({ length: cols }, (_, i) => (
             <text 
               key={`col-${i}`} 
@@ -275,7 +275,7 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
             </text>
           ))}
 
-          {/* 孔位 */}
+          {/* Wells */}
           {layout.wells.map((well) => (
             <Well
               key={well.wellId}
@@ -301,42 +301,42 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
         )}
       </DndContext>
 
-      {/* 图例 - 紧凑模式不显示 */}
+      {/* Legend - hidden in compact mode */}
       {!compact && (
         <div className="plate-legend">
           <div className="legend-section">
             <div className="legend-item">
               <span className="legend-color" style={{ background: WELL_COLORS.empty }}></span>
-              <span>空/边缘</span>
+              <span>Empty/Edge</span>
             </div>
             <div className="legend-item">
               <span className="legend-color" style={{ background: WELL_COLORS.positive_control }}></span>
-              <span>阳性对照</span>
+              <span>Positive Control</span>
             </div>
             <div className="legend-item">
               <span className="legend-color" style={{ background: WELL_COLORS.negative_control }}></span>
-              <span>阴性对照</span>
+              <span>Negative Control</span>
             </div>
           </div>
           {geneIds.length > 0 && (
             <div className="legend-section gene-legend">
-              <span className="legend-title">基因:</span>
+              <span className="legend-title">Genes:</span>
               {geneIds.slice(0, 12).map((geneId) => (
                 <div key={geneId} className="legend-item">
                   <span className="legend-color" style={{ background: getGeneColor(geneId, geneIds) }}></span>
                   <span>{geneId.slice(0, 8)}</span>
                 </div>
               ))}
-              {geneIds.length > 12 && <span className="legend-more">+{geneIds.length - 12} 更多</span>}
+              {geneIds.length > 12 && <span className="legend-more">+{geneIds.length - 12} more</span>}
             </div>
           )}
         </div>
       )}
 
-      {/* 违规警告 - 紧凑模式不显示 */}
+      {/* Violations - hidden in compact mode */}
       {!compact && layout.violations.length > 0 && (
         <div className="violations">
-          <h4>⚠️ 约束违规</h4>
+          <h4>⚠️ Constraint Violations</h4>
           {layout.violations.map((v, i) => (
             <div key={i} className={`violation ${v.severity}`}>
               {v.message}

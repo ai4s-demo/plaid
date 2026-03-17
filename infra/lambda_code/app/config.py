@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     
     # AWS Bedrock
     aws_region: str = "us-east-1"
-    bedrock_model_id: str = "us.anthropic.claude-opus-4-6-v1:0"
+    bedrock_model_id: str = "us.anthropic.claude-sonnet-4-6-v1:0"
     
     # AWS Cognito (可选，不配置则不启用认证)
     cognito_region: str = "us-east-1"
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     cognito_app_client_id: Optional[str] = None
     
     # Solver
-    solver_timeout_seconds: int = 180
+    solver_timeout_seconds: int = 30
     
     # File Upload
     max_file_size_mb: int = 10

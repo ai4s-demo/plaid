@@ -7,7 +7,7 @@ import {
 } from 'amazon-cognito-identity-js';
 import { AUTH_CONFIG } from '../config/auth';
 
-// 初始化 User Pool
+// Initialize User Pool
 const userPool = new CognitoUserPool({
   UserPoolId: AUTH_CONFIG.userPoolId,
   ClientId: AUTH_CONFIG.userPoolWebClientId,
@@ -31,7 +31,7 @@ export interface SignInParams {
   password: string;
 }
 
-// 注册
+// Sign up
 export function signUp(params: SignUpParams): Promise<void> {
   return new Promise((resolve, reject) => {
     const attributeList = [
@@ -60,7 +60,7 @@ export function signUp(params: SignUpParams): Promise<void> {
   });
 }
 
-// 确认注册（验证码）
+// Confirm sign up (verification code)
 export function confirmSignUp(username: string, code: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
@@ -78,7 +78,7 @@ export function confirmSignUp(username: string, code: string): Promise<void> {
   });
 }
 
-// 登录
+// Sign in
 export function signIn(params: SignInParams): Promise<CognitoUserSession> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
@@ -91,7 +91,7 @@ export function signIn(params: SignInParams): Promise<CognitoUserSession> {
       Password: params.password,
     });
 
-    // 使用 USER_PASSWORD_AUTH 而不是 SRP
+    // Use USER_PASSWORD_AUTH instead of SRP
     cognitoUser.authenticateUser(authDetails, {
       onSuccess: (session) => {
         console.log('[Auth] authenticateUser success');
@@ -102,7 +102,7 @@ export function signIn(params: SignInParams): Promise<CognitoUserSession> {
         reject(err);
       },
       newPasswordRequired: (_userAttributes) => {
-        // 首次登录需要修改密码的情况
+        // First login requires password change
         console.log('[Auth] newPasswordRequired');
         reject(new Error('NEW_PASSWORD_REQUIRED'));
       },
@@ -110,7 +110,7 @@ export function signIn(params: SignInParams): Promise<CognitoUserSession> {
   });
 }
 
-// 登出
+// Sign out
 export function signOut(): void {
   const cognitoUser = userPool.getCurrentUser();
   if (cognitoUser) {
@@ -118,7 +118,7 @@ export function signOut(): void {
   }
 }
 
-// 获取当前用户
+// Get current user
 export function getCurrentUser(): Promise<AuthUser | null> {
   return new Promise((resolve, reject) => {
     const cognitoUser = userPool.getCurrentUser();
@@ -160,7 +160,7 @@ export function getCurrentUser(): Promise<AuthUser | null> {
   });
 }
 
-// 获取当前 session
+// Get current session
 export function getSession(): Promise<CognitoUserSession | null> {
   return new Promise((resolve, reject) => {
     const cognitoUser = userPool.getCurrentUser();
@@ -180,19 +180,19 @@ export function getSession(): Promise<CognitoUserSession | null> {
   });
 }
 
-// 获取 ID Token（用于 API 调用）
+// Get ID Token (for API calls)
 export async function getIdToken(): Promise<string | null> {
   const session = await getSession();
   return session?.getIdToken().getJwtToken() || null;
 }
 
-// 获取 Access Token
+// Get Access Token
 export async function getAccessToken(): Promise<string | null> {
   const session = await getSession();
   return session?.getAccessToken().getJwtToken() || null;
 }
 
-// 重新发送验证码
+// Resend confirmation code
 export function resendConfirmationCode(username: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
@@ -210,7 +210,7 @@ export function resendConfirmationCode(username: string): Promise<void> {
   });
 }
 
-// 忘记密码
+// Forgot password
 export function forgotPassword(username: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
@@ -225,7 +225,7 @@ export function forgotPassword(username: string): Promise<void> {
   });
 }
 
-// 确认新密码
+// Confirm new password
 export function confirmPassword(
   username: string,
   code: string,

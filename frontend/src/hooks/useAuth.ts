@@ -31,7 +31,7 @@ export function useAuth() {
     pendingUsername: null,
   });
 
-  // 检查当前登录状态
+  // Check current login status
   useEffect(() => {
     if (!isAuthConfigured()) {
       console.log('[Auth] Auth not configured, skipping');
@@ -62,7 +62,7 @@ export function useAuth() {
       });
   }, []);
 
-  // 登录
+  // Sign in
   const signIn = useCallback(async (params: SignInParams) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
@@ -73,11 +73,11 @@ export function useAuth() {
       const user = await getCurrentUser();
       console.log('[Auth] User:', user);
       
-      // 强制刷新页面以确保状态更新
+      // Force page reload to ensure state update
       window.location.reload();
     } catch (err: unknown) {
       const error = err as Error;
-      let message = error.message || '登录失败';
+      let message = error.message || 'Sign in failed';
       
       if (error.name === 'UserNotConfirmedException') {
         setState(prev => ({
@@ -85,13 +85,13 @@ export function useAuth() {
           isLoading: false,
           needsConfirmation: true,
           pendingUsername: params.username,
-          error: '请先验证邮箱',
+          error: 'Please verify your email first',
         }));
         return;
       }
       
       if (error.name === 'NotAuthorizedException') {
-        message = '用户名或密码错误';
+        message = 'Incorrect username or password';
       }
       
       setState(prev => ({
@@ -102,7 +102,7 @@ export function useAuth() {
     }
   }, []);
 
-  // 注册
+  // Sign up
   const signUp = useCallback(async (params: SignUpParams) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
@@ -117,10 +117,10 @@ export function useAuth() {
       }));
     } catch (err: unknown) {
       const error = err as Error;
-      let message = error.message || '注册失败';
+      let message = error.message || 'Sign up failed';
       
       if (error.name === 'UsernameExistsException') {
-        message = '用户名已存在';
+        message = 'Username already exists';
       }
       
       setState(prev => ({
@@ -131,7 +131,7 @@ export function useAuth() {
     }
   }, []);
 
-  // 确认注册
+  // Confirm sign up
   const confirmSignUp = useCallback(async (code: string) => {
     if (!state.pendingUsername) return;
     
@@ -151,12 +151,12 @@ export function useAuth() {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error.message || '验证失败',
+        error: error.message || 'Verification failed',
       }));
     }
   }, [state.pendingUsername]);
 
-  // 登出
+  // Sign out
   const signOut = useCallback(() => {
     cognitoSignOut();
     setState({
@@ -169,7 +169,7 @@ export function useAuth() {
     });
   }, []);
 
-  // 清除错误
+  // Clear error
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
   }, []);

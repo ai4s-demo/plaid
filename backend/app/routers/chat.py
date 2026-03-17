@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 import json
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from app.services import AgentService, LayoutService
 from app.models import DesignParameters, SourcePlate, SourceWell, SolveStatus
@@ -87,7 +88,7 @@ async def chat(request: ChatRequest):
                     
                     if ai_params:
                         # 使用 AI 提取的参数
-                        params, selected_genes = agent_service.build_params_from_ai_result(ai_params, all_genes)
+                        params, selected_genes = agent_service.build_params_from_ai_result(ai_params, all_genes, user_message=request.message)
                         wells_data = [w for w in wells_data if w.gene_symbol in selected_genes]
                         
                         # 构建基因信息
@@ -122,12 +123,25 @@ async def chat(request: ChatRequest):
                     print(f"[DEBUG] Source plate: {source_plate.barcode}, wells: {len(source_plate.wells)}, genes: {len(source_plate.get_genes())}, plate_type: {params.plate_type}")
                     print(f"[DEBUG] Gene configs: {params.gene_configs}")
                     
-                    # 生成布局
-                    result = layout_service.generate_layout(
-                        source_plate=source_plate,
-                        params=params
+                    # 生成布局（在后台线程运行，主协程发送心跳保活 SSE）
+                    loop = asyncio.get_event_loop()
+                    executor = ThreadPoolExecutor(max_workers=1)
+                    future = loop.run_in_executor(
+                        executor,
+                        layout_service.generate_layout,
+                        source_plate,
+                        params,
                     )
-                    
+
+                    while not future.done():
+                        yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+                        try:
+                            await asyncio.wait_for(asyncio.shield(future), timeout=10)
+                        except asyncio.TimeoutError:
+                            pass
+
+                    result = await future
+
                     if result.status == SolveStatus.SUCCESS or result.status == SolveStatus.PARTIAL:
                         # 转换布局为前端格式
                         layout = result.layouts[0] if result.layouts else None

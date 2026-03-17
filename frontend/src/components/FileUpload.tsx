@@ -46,7 +46,7 @@ export function FileUpload({ sourcePlate, isLoading, onUpload }: FileUploadProps
 
   return (
     <div className="file-upload">
-      <h3>📁 源板文件</h3>
+      <h3>📁 Source Plate File</h3>
 
       {!sourcePlate ? (
         <div
@@ -66,12 +66,12 @@ export function FileUpload({ sourcePlate, isLoading, onUpload }: FileUploadProps
           />
           <label htmlFor="file-input" className="upload-label">
             {isLoading ? (
-              <span>解析中...</span>
+              <span>Parsing...</span>
             ) : (
               <>
                 <span className="upload-icon">📤</span>
-                <span>拖拽文件到这里或点击上传</span>
-                <span className="upload-hint">支持 .xlsx, .csv</span>
+                <span>Drag file here or click to upload</span>
+                <span className="upload-hint">Supports .xlsx, .csv</span>
               </>
             )}
           </label>
@@ -79,22 +79,22 @@ export function FileUpload({ sourcePlate, isLoading, onUpload }: FileUploadProps
       ) : (
         <div className="source-info">
           <div className="info-item">
-            <span className="label">板 ID:</span>
+            <span className="label">Plate ID:</span>
             <span className="value">{sourcePlate.plateId}</span>
           </div>
           <div className="info-item">
-            <span className="label">基因数:</span>
+            <span className="label">Genes:</span>
             <span className="value">{sourcePlate.totalGenes}</span>
           </div>
           <div className="info-item">
-            <span className="label">孔位数:</span>
+            <span className="label">Wells:</span>
             <span className="value">{sourcePlate.wells.length}</span>
           </div>
           <button
             className="btn btn-secondary"
             onClick={() => window.location.reload()}
           >
-            重新上传
+            Re-upload
           </button>
         </div>
       )}

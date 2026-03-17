@@ -48,14 +48,14 @@ export function ChatPanel({ messages, isLoading, onSend, onStop, onSelectLayout 
       <div className="chat-messages">
         {messages.length === 0 && (
           <div className="chat-welcome">
-            <p>👋 你好！我是 Smart Campaign Designer 助手。</p>
-            <p>你可以：</p>
+            <p>👋 Hello! I'm your Smart Campaign Designer assistant.</p>
+            <p>You can:</p>
             <ul>
-              <li>上传源板文件（Excel/CSV）</li>
-              <li>描述你的实验设计需求</li>
-              <li>让我帮你生成优化的板布局</li>
+              <li>Upload a source plate file (Excel/CSV)</li>
+              <li>Describe your experiment design requirements</li>
+              <li>Let me generate an optimized plate layout for you</li>
             </ul>
-            <p>试试说："帮我生成一个96孔板布局，6个重复"</p>
+            <p>Try saying: "Generate a 96-well plate layout with 6 replicates"</p>
           </div>
         )}
 
@@ -67,16 +67,16 @@ export function ChatPanel({ messages, isLoading, onSend, onStop, onSelectLayout 
             <div className="message-content">
               <div className="message-text">{msg.content}</div>
               
-              {/* 显示关联的布局 */}
+              {/* Display associated layout */}
               {msg.layout && (
                 <div className="message-layout">
                   <div 
                     className="layout-header"
                     onClick={() => toggleLayout(msg.id)}
                   >
-                    <span>🧬 {msg.layout.plateFormat}孔板布局</span>
+                    <span>🧬 {msg.layout.plateFormat}-Well Plate Layout</span>
                     <span className="layout-toggle">
-                      {expandedLayouts.has(msg.id) ? '▼ 收起' : '▶ 展开'}
+                      {expandedLayouts.has(msg.id) ? '▼ Collapse' : '▶ Expand'}
                     </span>
                   </div>
                   
@@ -91,7 +91,7 @@ export function ChatPanel({ messages, isLoading, onSend, onStop, onSelectLayout 
                         className="btn btn-select-layout"
                         onClick={() => onSelectLayout?.(msg.layout!)}
                       >
-                        📋 使用此布局
+                        📋 Use This Layout
                       </button>
                     </div>
                   )}
@@ -124,17 +124,17 @@ export function ChatPanel({ messages, isLoading, onSend, onStop, onSelectLayout 
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="输入你的需求..."
+          placeholder="Enter your request..."
           disabled={isLoading}
           className="chat-input"
         />
         {isLoading ? (
           <button type="button" onClick={onStop} className="btn btn-stop">
-            ⏹ 停止
+            ⏹ Stop
           </button>
         ) : (
           <button type="submit" disabled={!input.trim()} className="btn btn-send">
-            发送 →
+            Send →
           </button>
         )}
       </form>

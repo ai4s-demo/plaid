@@ -24,11 +24,11 @@ export function useChat() {
 
   const abortRef = useRef<(() => void) | null>(null);
   
-  // 使用 ref 保持最新状态引用
+  // Use ref to keep latest state reference
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  // 发送消息
+  // Send message
   const sendMessage = useCallback(async (content: string) => {
     const userMessage: ChatMessage = {
       id: generateId(),
@@ -40,11 +40,11 @@ export function useChat() {
     const assistantId = generateId();
     let assistantContent = '';
     
-    // 获取当前最新的 messages
+    // Get the latest messages
     const currentMessages = stateRef.current.messages;
     const messagesWithUser = [...currentMessages, userMessage];
     
-    // 构建发送给后端的历史记录
+    // Build history to send to backend
     const historyForBackend = messagesWithUser.slice(-10).map(m => ({
       role: m.role,
       content: m.content,
@@ -85,7 +85,7 @@ export function useChat() {
           ),
         }));
       },
-      // onLayout - 将布局附加到当前助手消息
+      // onLayout - attach layout to the current assistant message
       (layout) => {
         setState((prev) => ({
           ...prev,
@@ -115,7 +115,7 @@ export function useChat() {
     abortRef.current = abort;
   }, []);
 
-  // 停止生成
+  // Stop generation
   const stopGeneration = useCallback(() => {
     if (abortRef.current) {
       abortRef.current();
@@ -124,7 +124,7 @@ export function useChat() {
     }
   }, []);
 
-  // 上传文件
+  // Upload file
   const uploadFile = useCallback(async (file: File) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
@@ -136,16 +136,16 @@ export function useChat() {
       }));
       return sourcePlate;
     } catch (err) {
-      const message = err instanceof Error ? err.message : '文件解析失败';
+      const message = err instanceof Error ? err.message : 'File parsing failed';
       setState((prev) => ({ ...prev, error: message, isLoading: false }));
       throw err;
     }
   }, []);
 
-  // 生成布局
+  // Generate layout
   const createLayout = useCallback(async () => {
     if (!state.sourcePlate) {
-      setState((prev) => ({ ...prev, error: '请先上传源板文件' }));
+      setState((prev) => ({ ...prev, error: 'Please upload a source plate file first' }));
       return;
     }
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
@@ -161,13 +161,13 @@ export function useChat() {
       }));
       return layout;
     } catch (err) {
-      const message = err instanceof Error ? err.message : '布局生成失败';
+      const message = err instanceof Error ? err.message : 'Layout generation failed';
       setState((prev) => ({ ...prev, error: message, isLoading: false }));
       throw err;
     }
   }, [state.sourcePlate, state.parameters]);
 
-  // 更新参数
+  // Update parameters
   const updateParameters = useCallback((params: Partial<DesignParameters>) => {
     setState((prev) => ({
       ...prev,
@@ -175,17 +175,17 @@ export function useChat() {
     }));
   }, []);
 
-  // 更新布局（拖拽后）
+  // Update layout (after drag)
   const updateLayout = useCallback((layout: PlateLayout) => {
     setState((prev) => ({ ...prev, currentLayout: layout }));
   }, []);
 
-  // 清除错误
+  // Clear error
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
   }, []);
 
-  // 重置
+  // Reset
   const reset = useCallback(() => {
     setState({
       sourcePlate: null,

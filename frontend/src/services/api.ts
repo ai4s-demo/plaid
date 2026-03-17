@@ -13,7 +13,7 @@ const api = axios.create({
   timeout: 30000,
 });
 
-// 文件解析
+// File parsing
 export async function parseFile(file: File): Promise<SourcePlate> {
   const formData = new FormData();
   formData.append('file', file);
@@ -21,7 +21,7 @@ export async function parseFile(file: File): Promise<SourcePlate> {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   
-  // 转换后端格式到前端格式
+  // Convert backend format to frontend format
   const data = response.data;
   const wells = (data.wells || []).map((w: { position: string; gene_symbol: string; volume?: number; concentration?: number }) => ({
     wellId: w.position,
@@ -30,8 +30,8 @@ export async function parseFile(file: File): Promise<SourcePlate> {
     volume: w.volume || 100,
     concentration: w.concentration || 0,
   }));
-  
-  // 计算唯一基因数
+
+  // Count unique genes
   const uniqueGenes = new Set(wells.map((w: { geneId: string }) => w.geneId));
   
   return {
@@ -42,21 +42,21 @@ export async function parseFile(file: File): Promise<SourcePlate> {
   };
 }
 
-// 布局生成
+// Layout generation
 export async function generateLayout(request: LayoutRequest): Promise<PlateLayout> {
   const response = await api.post<PlateLayout>('/layout/generate', request);
   return response.data;
 }
 
-// 布局更新
+// Layout update
 export async function updateLayout(request: UpdateLayoutRequest): Promise<PlateLayout> {
   const response = await api.put<PlateLayout>('/layout/update', request);
   return response.data;
 }
 
-// 生成 Picklist
+// Generate Picklist
 export async function generatePicklist(layout: PlateLayout, sourcePlate: SourcePlate): Promise<PicklistEntry[]> {
-  // 转换前端格式到后端格式
+  // Convert frontend format to backend format
   const backendLayout = {
     plate_barcode: layout.layoutId,
     plate_type: layout.plateFormat,
@@ -86,10 +86,10 @@ export async function generatePicklist(layout: PlateLayout, sourcePlate: SourceP
   const response = await api.post('/layout/picklist', {
     layouts: [backendLayout],
     source_plate: backendSourcePlate,
-    transfer_volume: 2500  // 默认 2.5ul = 2500nL
+    transfer_volume: 2500  // Default 2.5ul = 2500nL
   });
   
-  // 转换后端格式到前端格式
+  // Convert backend format to frontend format
   const entries = response.data.entries || [];
   return entries.map((e: {
     source_plate_barcode: string;
@@ -109,7 +109,7 @@ export async function generatePicklist(layout: PlateLayout, sourcePlate: SourceP
   }));
 }
 
-// SSE 聊天流
+// SSE chat stream
 export function createChatStream(
   request: ChatRequest,
   onMessage: (text: string) => void,
@@ -161,7 +161,7 @@ export function createChatStream(
                 return;
               }
             } catch {
-              // 如果解析失败，忽略
+              // Ignore if parsing fails
               console.warn('Failed to parse SSE data:', data);
             }
           }

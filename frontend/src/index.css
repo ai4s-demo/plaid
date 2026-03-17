@@ -359,7 +359,7 @@ body {
 }
 
 
-/* Message Layout - 聊天中嵌入的布局 */
+/* Message Layout - layout embedded in chat */
 .message-layout {
   margin-top: 0.75rem;
   border: 1px solid var(--border);
