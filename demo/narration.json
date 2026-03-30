@@ -1,0 +1,44 @@
+[
+  {
+    "id": "login",
+    "englishText": "Welcome to Smart Campaign Designer, an AI-powered microplate layout design tool built on AWS. Let's start by signing in.",
+    "chineseSubtitle": "欢迎使用Smart Campaign Designer，基于AWS构建的AI微孔板布局设计工具。让我们先登录。",
+    "estimatedDuration": 8
+  },
+  {
+    "id": "upload",
+    "englishText": "Now we upload our source plate Excel file. The system parses it and shows the plate ID, gene count, and well information.",
+    "chineseSubtitle": "现在上传源板Excel文件。系统解析后显示板ID、基因数量和孔位信息。",
+    "estimatedDuration": 8
+  },
+  {
+    "id": "chat_q1",
+    "englishText": "Let's use the AI chat to design our first layout. We ask for a 96-well plate with 6 replicates per gene and 1 edge layer. Watch the AI generate the layout in real time.",
+    "chineseSubtitle": "使用AI聊天设计第一个布局。请求96孔板，每个基因6个重复，1层边缘。观察AI实时生成布局。",
+    "estimatedDuration": 12
+  },
+  {
+    "id": "chat_q2",
+    "englishText": "For our second design, we upgrade to a 384-well plate with 8 replicates and 2 edge layers. The AI remembers context and redesigns accordingly.",
+    "chineseSubtitle": "第二次设计升级到384孔板，8个重复和2层边缘。AI记住上下文并重新设计。",
+    "estimatedDuration": 12
+  },
+  {
+    "id": "chat_q3",
+    "englishText": "Now a custom configuration: first 10 genes with 8 replicates, but Gene 25 gets 20 replicates for dose-response. The AI handles heterogeneous requirements effortlessly.",
+    "chineseSubtitle": "自定义配置：前10个基因各8个重复，Gene25需要20个重复用于剂量反应。AI轻松处理异构需求。",
+    "estimatedDuration": 12
+  },
+  {
+    "id": "drag",
+    "englishText": "The plate view is fully interactive. We can drag and drop wells to fine-tune positions manually.",
+    "chineseSubtitle": "板视图完全可交互。可以拖放孔位手动微调布局。",
+    "estimatedDuration": 8
+  },
+  {
+    "id": "export",
+    "englishText": "When ready, export as Picklist CSV for liquid handlers, JSON for programmatic use, or PDF report for documentation. Thank you for watching!",
+    "chineseSubtitle": "准备好后可导出Picklist CSV、JSON文件或PDF报告。感谢观看！",
+    "estimatedDuration": 10
+  }
+]

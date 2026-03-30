@@ -115,7 +115,8 @@ export function createChatStream(
   onMessage: (text: string) => void,
   onLayout: (layout: PlateLayout) => void,
   onError: (error: string) => void,
-  onDone: () => void
+  onDone: () => void,
+  onLayouts?: (layouts: PlateLayout[]) => void
 ): () => void {
   const controller = new AbortController();
 
@@ -154,6 +155,8 @@ export function createChatStream(
                 onMessage(event.content);
               } else if (event.type === 'layout' && event.content) {
                 onLayout(event.content);
+              } else if (event.type === 'layouts' && event.content && onLayouts) {
+                onLayouts(event.content);
               } else if (event.type === 'error') {
                 onError(event.content || 'Unknown error');
               } else if (event.type === 'done') {

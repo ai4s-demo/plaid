@@ -20,6 +20,8 @@ function App() {
   const {
     sourcePlate,
     currentLayout,
+    allLayouts,
+    currentPlateIndex,
     messages,
     isLoading,
     error,
@@ -27,6 +29,7 @@ function App() {
     stopGeneration,
     uploadFile,
     updateLayout,
+    switchPlate,
     clearError,
   } = useChat();
 
@@ -87,6 +90,19 @@ function App() {
         </aside>
 
         <section className="content">
+          {allLayouts.length > 1 && (
+            <div className="plate-tabs">
+              {allLayouts.map((_, i) => (
+                <button
+                  key={i}
+                  className={`plate-tab ${i === currentPlateIndex ? 'active' : ''}`}
+                  onClick={() => switchPlate(i)}
+                >
+                  Plate {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="plate-container">
             <PlateView layout={currentLayout} onLayoutChange={updateLayout} />
           </div>
@@ -104,7 +120,7 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>Powered by Amazon Bedrock & OR-Tools | PLAID Methodology</p>
+        <p>Powered by Amazon Bedrock & MiniZinc | PLAID Methodology</p>
       </footer>
     </div>
   );

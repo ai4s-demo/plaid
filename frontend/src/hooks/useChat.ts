@@ -16,6 +16,8 @@ export function useChat() {
   const [state, setState] = useState<AppState>({
     sourcePlate: null,
     currentLayout: null,
+    allLayouts: [],
+    currentPlateIndex: 0,
     parameters: DEFAULT_PARAMETERS,
     messages: [],
     isLoading: false,
@@ -90,6 +92,8 @@ export function useChat() {
         setState((prev) => ({
           ...prev,
           currentLayout: layout,
+          allLayouts: [layout],
+          currentPlateIndex: 0,
           messages: prev.messages.map((m) =>
             m.id === assistantId ? { ...m, layout } : m
           ),
@@ -108,6 +112,18 @@ export function useChat() {
         setState((prev) => ({
           ...prev,
           isLoading: false,
+        }));
+      },
+      // onLayouts - multiple plates
+      (layouts) => {
+        setState((prev) => ({
+          ...prev,
+          allLayouts: layouts,
+          currentLayout: layouts[0],
+          currentPlateIndex: 0,
+          messages: prev.messages.map((m) =>
+            m.id === assistantId ? { ...m, layouts } : m
+          ),
         }));
       }
     );
@@ -180,6 +196,18 @@ export function useChat() {
     setState((prev) => ({ ...prev, currentLayout: layout }));
   }, []);
 
+  // Switch between plates
+  const switchPlate = useCallback((index: number) => {
+    setState((prev) => {
+      if (index < 0 || index >= prev.allLayouts.length) return prev;
+      return {
+        ...prev,
+        currentPlateIndex: index,
+        currentLayout: prev.allLayouts[index],
+      };
+    });
+  }, []);
+
   // Clear error
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
@@ -190,6 +218,8 @@ export function useChat() {
     setState({
       sourcePlate: null,
       currentLayout: null,
+      allLayouts: [],
+      currentPlateIndex: 0,
       parameters: DEFAULT_PARAMETERS,
       messages: [],
       isLoading: false,
@@ -205,6 +235,7 @@ export function useChat() {
     createLayout,
     updateParameters,
     updateLayout,
+    switchPlate,
     clearError,
     reset,
   };

@@ -29,6 +29,8 @@ export interface DesignParameters {
 export interface PlateLayout {
   layoutId: string;
   plateFormat: 96 | 384 | 1536;
+  plateIndex?: number;
+  plateBarcode?: string;
   wells: LayoutWell[];
   violations: ConstraintViolation[];
   score: number;
@@ -70,7 +72,8 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   attachments?: Attachment[];
-  layout?: PlateLayout;  // Associated layout
+  layout?: PlateLayout;  // Associated layout (first plate)
+  layouts?: PlateLayout[];  // All plates when multi-plate
 }
 
 export interface Attachment {
@@ -118,6 +121,8 @@ export interface SSEEvent {
 export interface AppState {
   sourcePlate: SourcePlate | null;
   currentLayout: PlateLayout | null;
+  allLayouts: PlateLayout[];
+  currentPlateIndex: number;
   parameters: DesignParameters;
   messages: ChatMessage[];
   isLoading: boolean;

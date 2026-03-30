@@ -112,6 +112,9 @@ export function ChatPanel({ messages, isLoading, onSend, onStop, onSelectLayout 
               <div className="typing-indicator">
                 <span></span><span></span><span></span>
               </div>
+              <div className="loading-hint">
+                Generation may take up to 30 seconds. The MiniZinc solver uses this time to explore multiple feasible solutions and return the optimal one.
+              </div>
             </div>
           </div>
         )}

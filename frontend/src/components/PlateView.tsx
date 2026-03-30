@@ -51,6 +51,17 @@ function getGeneColor(geneId: string, allGeneIds: string[]): string {
   return GENE_PALETTE[index % GENE_PALETTE.length];
 }
 
+// Abbreviate gene name to fit inside a well circle
+function abbreviateGene(name: string): string {
+  // "Gene1" → "G1", "Gene25" → "G25"
+  const m = name.match(/^(Gene)(\d+)$/i);
+  if (m) return `G${m[2]}`;
+  // Short names (≤5 chars) shown in full: "BRCA1", "TP53", "KRAS"
+  if (name.length <= 5) return name;
+  // Longer names: first 5 chars
+  return name.slice(0, 5);
+}
+
 // Single well component
 function Well({
   well,
@@ -127,7 +138,7 @@ function Well({
           fill="#fff"
           pointerEvents="none"
         >
-          {well.geneName?.slice(0, 4) || well.geneId.slice(0, 4)}
+          {abbreviateGene(well.geneName || well.geneId)}
         </text>
       )}
     </g>
@@ -324,7 +335,7 @@ export function PlateView({ layout, onLayoutChange, compact = false }: PlateView
               {geneIds.slice(0, 12).map((geneId) => (
                 <div key={geneId} className="legend-item">
                   <span className="legend-color" style={{ background: getGeneColor(geneId, geneIds) }}></span>
-                  <span>{geneId.slice(0, 8)}</span>
+                  <span>{geneId}</span>
                 </div>
               ))}
               {geneIds.length > 12 && <span className="legend-more">+{geneIds.length - 12} more</span>}
