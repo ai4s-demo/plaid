@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 import json
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from app.services import AgentService, LayoutService
 from app.models import DesignParameters, SourcePlate, SourceWell, SolveStatus
@@ -82,37 +83,41 @@ async def chat(request: ChatRequest):
                     
                     all_genes = sorted(list(set(w.gene_symbol for w in wells_data)), key=natural_sort_key)
                     
-                    # 尝试使用 AI 提取结构化参数
+                    # Extract structured parameters via LLM tool_use
                     ai_params = await agent_service.extract_params_with_ai(request.message, all_genes)
-                    
+
                     if ai_params:
-                        # 使用 AI 提取的参数
                         params, selected_genes = agent_service.build_params_from_ai_result(ai_params, all_genes)
                         wells_data = [w for w in wells_data if w.gene_symbol in selected_genes]
-                        
-                        # 构建基因信息
-                        gene_configs_info = ""
-                        if params.gene_configs:
-                            configs = [f"{g}: {c.replicates}个重复" for g, c in params.gene_configs.items()]
-                            gene_configs_info = f"，特殊配置: {', '.join(configs)}"
-                        
-                        gene_info = f"已选择 {len(selected_genes)} 个基因{gene_configs_info}"
-                        
-                        yield f"data: {json.dumps({'type': 'text', 'content': f'参数解析完成，正在生成布局...'}, ensure_ascii=False)}\n\n"
-                        await asyncio.sleep(0)
                     else:
-                        # 回退到正则表达式提取
-                        gene_count = agent_service.extract_gene_count(request.message, len(all_genes))
-                        
-                        if gene_count is not None and gene_count < len(all_genes):
-                            selected_genes = all_genes[:gene_count]
-                            wells_data = [w for w in wells_data if w.gene_symbol in set(selected_genes)]
-                            gene_info = f"已选择前 {gene_count} 个基因: {', '.join(selected_genes)}"
-                        else:
-                            selected_genes = all_genes
-                            gene_info = f"使用全部 {len(all_genes)} 个基因"
-                        
-                        params = agent_service.extract_parameters(request.message, request.history, len(selected_genes))
+                        # Fallback: use all genes with defaults
+                        selected_genes = all_genes
+                        params = DesignParameters.default()
+
+                    gene_info = f"Selected {len(selected_genes)} genes"
+
+                    # Capacity pre-check
+                    total_samples = sum(params.get_replicates_for_gene(g) for g in selected_genes)
+                    plate_dims = params.get_plate_dimensions()
+                    inner_rows = plate_dims[0] - 2 * params.edge_empty_layers
+                    inner_cols = plate_dims[1] - 2 * params.edge_empty_layers
+                    wells_per_plate = inner_rows * inner_cols
+
+                    if wells_per_plate <= 0:
+                        yield f"data: {json.dumps({'type': 'text', 'content': f'Error: edge_empty_layers={params.edge_empty_layers} leaves no usable wells on a {params.plate_type.value}-well plate.'}, ensure_ascii=False)}\n\n"
+                        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                        return
+
+                    import math
+                    needed_plates = math.ceil(total_samples / wells_per_plate)
+
+                    if needed_plates > 1:
+                        capacity_msg = f'Parameters parsed. Note: {total_samples} samples > {wells_per_plate} wells/plate ({params.plate_type.value}-well, {params.edge_empty_layers} edge layers), will use {needed_plates} plates. Generating layout...'
+                    else:
+                        capacity_msg = 'Parameters parsed, generating layout...'
+
+                    yield f"data: {json.dumps({'type': 'text', 'content': capacity_msg}, ensure_ascii=False)}\n\n"
+                    await asyncio.sleep(0)
                     
                     source_plate = SourcePlate(
                         barcode=source_data.get('plateId') or source_data.get('barcode', 'SOURCE_PLATE'),
@@ -122,68 +127,91 @@ async def chat(request: ChatRequest):
                     print(f"[DEBUG] Source plate: {source_plate.barcode}, wells: {len(source_plate.wells)}, genes: {len(source_plate.get_genes())}, plate_type: {params.plate_type}")
                     print(f"[DEBUG] Gene configs: {params.gene_configs}")
                     
-                    # 生成布局
-                    result = layout_service.generate_layout(
-                        source_plate=source_plate,
-                        params=params
+                    # 生成布局（在后台线程运行，主协程发送心跳保活 SSE）
+                    loop = asyncio.get_event_loop()
+                    executor = ThreadPoolExecutor(max_workers=1)
+                    future = loop.run_in_executor(
+                        executor,
+                        layout_service.generate_layout,
+                        source_plate,
+                        params,
                     )
-                    
+
+                    while not future.done():
+                        yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+                        try:
+                            await asyncio.wait_for(asyncio.shield(future), timeout=10)
+                        except asyncio.TimeoutError:
+                            pass
+
+                    result = await future
+
                     if result.status == SolveStatus.SUCCESS or result.status == SolveStatus.PARTIAL:
-                        # 转换布局为前端格式
-                        layout = result.layouts[0] if result.layouts else None
-                        if layout:
-                            frontend_layout = {
-                                'layoutId': f'layout_{layout.plate_index}',
-                                'plateFormat': layout.plate_type.value,
-                                'wells': [
-                                    {
-                                        'wellId': w.position,
-                                        'row': w.row,
-                                        'col': w.col,
-                                        'geneId': w.gene_symbol,
-                                        'geneName': w.gene_symbol,
-                                        'wellType': w.content_type.value,
-                                        'replicateIndex': w.replicate_index or 0
-                                    }
-                                    for w in layout.wells
-                                ],
-                                'violations': [
-                                    {
-                                        'type': v.constraint_name,
-                                        'severity': v.severity,
-                                        'message': v.description,
-                                        'wells': v.affected_wells
-                                    }
-                                    for v in (result.violations or [])
-                                ],
-                                'score': 1.0 - len(result.violations or []) * 0.1,
-                                'createdAt': ''
-                            }
-                            
-                            # 发送布局数据
-                            yield f"data: {json.dumps({'type': 'layout', 'content': frontend_layout}, ensure_ascii=False)}\n\n"
-                            await asyncio.sleep(0)
-                            
-                            plate_info = f"{params.plate_type.value}孔板"
-                            
-                            # 计算总样本数
-                            total_samples = sum(params.get_replicates_for_gene(g) for g in selected_genes)
-                            
-                            # 构建详细的配置信息
+                        layouts = result.layouts or []
+                        if layouts:
+                            # Convert all plates to frontend format
+                            frontend_layouts = []
+                            for layout in layouts:
+                                frontend_layout = {
+                                    'layoutId': f'layout_{layout.plate_index}',
+                                    'plateFormat': layout.plate_type.value,
+                                    'plateIndex': layout.plate_index,
+                                    'plateBarcode': layout.plate_barcode,
+                                    'wells': [
+                                        {
+                                            'wellId': w.position,
+                                            'row': w.row,
+                                            'col': w.col,
+                                            'geneId': w.gene_symbol,
+                                            'geneName': w.gene_symbol,
+                                            'wellType': w.content_type.value,
+                                            'replicateIndex': w.replicate_index or 0
+                                        }
+                                        for w in layout.wells
+                                    ],
+                                    'violations': [
+                                        {
+                                            'type': v.constraint_name,
+                                            'severity': v.severity,
+                                            'message': v.description,
+                                            'wells': v.affected_wells
+                                        }
+                                        for v in (result.violations or [])
+                                    ],
+                                    'score': 1.0 - len(result.violations or []) * 0.1,
+                                    'createdAt': ''
+                                }
+                                frontend_layouts.append(frontend_layout)
+
+                            # Send each plate as a separate event
+                            total_plates = len(frontend_layouts)
+                            for fl in frontend_layouts:
+                                fl['totalPlates'] = total_plates
+                                yield f"data: {json.dumps({'type': 'layout', 'content': fl}, ensure_ascii=False)}\n\n"
+                                await asyncio.sleep(0)
+
+                            plate_info = f"{params.plate_type.value}-well plate"
+
+                            total_samples_final = sum(params.get_replicates_for_gene(g) for g in selected_genes)
+
                             if params.gene_configs:
-                                special_configs = [f"{g}({c.replicates}次)" for g, c in params.gene_configs.items()]
-                                config_detail = f"，特殊配置: {', '.join(special_configs)}"
+                                special_configs = [f"{g}({c.replicates}x)" for g, c in params.gene_configs.items()]
+                                config_detail = f", special: {', '.join(special_configs)}"
                             else:
                                 config_detail = ""
-                            
-                            msg = f'\n\n✅ 布局生成成功！{gene_info}，默认每个基因 {params.replicates} 个重复{config_detail}，总样本数 {total_samples}，使用 {plate_info}。已在左侧显示。'
-                            yield f"data: {json.dumps({'type': 'text', 'content': msg}, ensure_ascii=False)}\n\n"
+
+                            num_plates = len(frontend_layouts)
+                            if num_plates > 1:
+                                plate_count_info = f". Spread across **{num_plates} plates** ({wells_per_plate} wells/plate). Use the plate selector to switch between plates."
+                            else:
+                                plate_count_info = ""
+                            msg = f'\n\nLayout generated! {gene_info}, {params.replicates} replicates each{config_detail}, {total_samples_final} total samples, {plate_info}{plate_count_info}.'
+                            yield f"data: {json.dumps({'type': 'text', 'content': msg})}\n\n"
                         else:
-                            msg = '\n\n❌ 布局生成失败，请检查参数。'
-                            yield f"data: {json.dumps({'type': 'text', 'content': msg}, ensure_ascii=False)}\n\n"
+                            yield f"data: {json.dumps({'type': 'text', 'content': 'Layout generation failed. Please check parameters.'})}\n\n"
                     else:
-                        msg = f'\n\n❌ {result.message}'
-                        yield f"data: {json.dumps({'type': 'text', 'content': msg}, ensure_ascii=False)}\n\n"
+                        msg = f'\n\n{result.message}'
+                        yield f"data: {json.dumps({'type': 'text', 'content': msg})}\n\n"
                         
                 except Exception as e:
                     msg = f'\n\n布局生成错误: {str(e)}'

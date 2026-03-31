@@ -1,4 +1,4 @@
-// 源板数据
+// Source plate data
 export interface SourcePlate {
   plateId: string;
   wells: SourceWell[];
@@ -14,7 +14,7 @@ export interface SourceWell {
   volume: number;
 }
 
-// 设计参数
+// Design parameters
 export interface DesignParameters {
   plateFormat: 96 | 384 | 1536;
   replicates: number;
@@ -25,10 +25,13 @@ export interface DesignParameters {
   noAdjacent: boolean;
 }
 
-// 板布局
+// Plate layout
 export interface PlateLayout {
   layoutId: string;
   plateFormat: 96 | 384 | 1536;
+  plateIndex?: number;
+  plateBarcode?: string;
+  totalPlates?: number;
   wells: LayoutWell[];
   violations: ConstraintViolation[];
   score: number;
@@ -63,14 +66,15 @@ export interface PicklistEntry {
   geneName: string;
 }
 
-// 聊天消息
+// Chat message
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
   attachments?: Attachment[];
-  layout?: PlateLayout;  // 关联的布局
+  layout?: PlateLayout;  // Associated layout (first plate)
+  layouts?: PlateLayout[];  // All plates when multi-plate
 }
 
 export interface Attachment {
@@ -79,7 +83,7 @@ export interface Attachment {
   data: SourcePlate | PlateLayout;
 }
 
-// API 请求/响应
+// API request/response
 export interface ChatRequest {
   message: string;
   context?: ChatContext;
@@ -108,23 +112,25 @@ export interface WellChange {
   newWellType?: 'sample' | 'control' | 'empty';
 }
 
-// SSE 事件
+// SSE events
 export interface SSEEvent {
   type: 'message' | 'layout' | 'error' | 'done';
   data: string | PlateLayout | { message: string };
 }
 
-// 应用状态
+// App state
 export interface AppState {
   sourcePlate: SourcePlate | null;
   currentLayout: PlateLayout | null;
+  allLayouts: PlateLayout[];
+  currentPlateIndex: number;
   parameters: DesignParameters;
   messages: ChatMessage[];
   isLoading: boolean;
   error: string | null;
 }
 
-// 默认参数
+// Default parameters
 export const DEFAULT_PARAMETERS: DesignParameters = {
   plateFormat: 96,
   replicates: 6,

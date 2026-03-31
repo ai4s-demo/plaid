@@ -20,6 +20,8 @@ function App() {
   const {
     sourcePlate,
     currentLayout,
+    allLayouts,
+    currentPlateIndex,
     messages,
     isLoading,
     error,
@@ -27,27 +29,28 @@ function App() {
     stopGeneration,
     uploadFile,
     updateLayout,
+    switchPlate,
     clearError,
   } = useChat();
 
-  // 从聊天历史中选择一个布局
+  // Select a layout from chat history
   const handleSelectLayout = (layout: PlateLayout) => {
     updateLayout(layout);
   };
 
-  // 认证加载中
+  // Authentication loading
   if (authLoading) {
     return (
       <div className="app loading-screen">
         <div className="loading-content">
           <span className="loading-icon">🧬</span>
-          <p>加载中...</p>
+          <p>Loading...</p>
         </div>
       </div>
     );
   }
 
-  // 如果配置了认证但未登录，显示登录页
+  // If auth is configured but user is not signed in, show login page
   if (authConfigured && !isAuthenticated) {
     return <AuthPage />;
   }
@@ -57,12 +60,12 @@ function App() {
       <header className="app-header">
         <h1>🧬 Smart Campaign Designer</h1>
         <div className="header-right">
-          <p>AI 驱动的微孔板布局设计工具</p>
+          <p>AI-Powered Microplate Layout Design Tool</p>
           {isAuthenticated && user && (
             <div className="user-info">
               <span>👤 {user.name || user.username}</span>
               <button className="btn btn-logout" onClick={signOut}>
-                退出
+                Sign Out
               </button>
             </div>
           )}
@@ -87,6 +90,19 @@ function App() {
         </aside>
 
         <section className="content">
+          {allLayouts.length > 1 && (
+            <div className="plate-tabs">
+              {allLayouts.map((_, i) => (
+                <button
+                  key={i}
+                  className={`plate-tab ${i === currentPlateIndex ? 'active' : ''}`}
+                  onClick={() => switchPlate(i)}
+                >
+                  Plate {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="plate-container">
             <PlateView layout={currentLayout} onLayoutChange={updateLayout} />
           </div>
@@ -104,7 +120,7 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>Powered by Amazon Bedrock & OR-Tools | PLAID Methodology</p>
+        <p>Powered by Amazon Bedrock & MiniZinc | PLAID Methodology</p>
       </footer>
     </div>
   );

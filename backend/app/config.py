@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     
     # AWS Bedrock
     aws_region: str = "us-east-1"
-    bedrock_model_id: str = "anthropic.claude-3-sonnet-20240229-v1:0"
+    bedrock_model_id: str = "us.anthropic.claude-sonnet-4-6-v1"
     
     # AWS Cognito (可选，不配置则不启用认证)
     cognito_region: str = "us-east-1"

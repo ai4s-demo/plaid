@@ -11,7 +11,7 @@ interface DownloadPanelProps {
 export function DownloadPanel({ layout, sourcePlate }: DownloadPanelProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // 下载 Picklist CSV
+  // Download Picklist CSV
   const downloadPicklist = useCallback(async () => {
     if (!layout || !sourcePlate) return;
     setIsGenerating(true);
@@ -21,20 +21,20 @@ export function DownloadPanel({ layout, sourcePlate }: DownloadPanelProps) {
       const csv = generateCSV(picklist);
       downloadFile(csv, `picklist_${layout.layoutId}.csv`, 'text/csv');
     } catch (err) {
-      console.error('生成 Picklist 失败:', err);
+      console.error('Failed to generate Picklist:', err);
     } finally {
       setIsGenerating(false);
     }
   }, [layout, sourcePlate]);
 
-  // 下载布局 JSON
+  // Download layout JSON
   const downloadJSON = useCallback(() => {
     if (!layout) return;
     const json = JSON.stringify(layout, null, 2);
     downloadFile(json, `layout_${layout.layoutId}.json`, 'application/json');
   }, [layout]);
 
-  // 下载 PDF 报告
+  // Download PDF report
   const downloadPDF = useCallback(() => {
     if (!layout) return;
     setIsGenerating(true);
@@ -43,56 +43,56 @@ export function DownloadPanel({ layout, sourcePlate }: DownloadPanelProps) {
       const doc = new jsPDF();
       const { plateFormat, wells, score, violations, layoutId, createdAt } = layout;
 
-      // 标题
+      // Title
       doc.setFontSize(18);
-      doc.text('Smart Campaign Designer - 布局报告', 20, 20);
+      doc.text('Smart Campaign Designer - Layout Report', 20, 20);
 
-      // 基本信息
+      // Basic info
       doc.setFontSize(12);
-      doc.text(`布局 ID: ${layoutId}`, 20, 35);
-      doc.text(`板格式: ${plateFormat} 孔`, 20, 45);
-      doc.text(`优化得分: ${score.toFixed(2)}`, 20, 55);
-      doc.text(`生成时间: ${new Date(createdAt).toLocaleString()}`, 20, 65);
+      doc.text(`Layout ID: ${layoutId}`, 20, 35);
+      doc.text(`Plate Format: ${plateFormat}-Well`, 20, 45);
+      doc.text(`Optimization Score: ${score.toFixed(2)}`, 20, 55);
+      doc.text(`Generated: ${new Date(createdAt).toLocaleString()}`, 20, 65);
 
-      // 统计
+      // Statistics
       const sampleCount = wells.filter((w) => w.wellType === 'sample').length;
       const controlCount = wells.filter((w) => w.wellType === 'control').length;
       const emptyCount = wells.filter((w) => w.wellType === 'empty').length;
       const edgeCount = wells.filter((w) => w.wellType === 'edge').length;
 
-      doc.text('孔位统计:', 20, 80);
-      doc.text(`  样本: ${sampleCount}`, 25, 90);
-      doc.text(`  对照: ${controlCount}`, 25, 100);
-      doc.text(`  空孔: ${emptyCount}`, 25, 110);
-      doc.text(`  边缘: ${edgeCount}`, 25, 120);
+      doc.text('Well Statistics:', 20, 80);
+      doc.text(`  Samples: ${sampleCount}`, 25, 90);
+      doc.text(`  Controls: ${controlCount}`, 25, 100);
+      doc.text(`  Empty: ${emptyCount}`, 25, 110);
+      doc.text(`  Edge: ${edgeCount}`, 25, 120);
 
-      // 违规
+      // Violations
       if (violations.length > 0) {
-        doc.text('约束违规:', 20, 135);
+        doc.text('Constraint Violations:', 20, 135);
         violations.forEach((v, i) => {
           doc.text(`  ${i + 1}. ${v.message}`, 25, 145 + i * 10);
         });
       }
 
-      // 绘制板布局
+      // Draw plate layout
       const rows = plateFormat === 96 ? 8 : 16;
       const cols = plateFormat === 96 ? 12 : 24;
       const cellSize = plateFormat === 96 ? 12 : 6;
       const startX = 20;
       const startY = violations.length > 0 ? 170 : 140;
 
-      // 行标签
+      // Row labels
       for (let r = 0; r < rows; r++) {
         doc.setFontSize(8);
         doc.text(String.fromCharCode(65 + r), startX - 8, startY + r * cellSize + cellSize / 2 + 2);
       }
 
-      // 列标签
+      // Column labels
       for (let c = 0; c < cols; c++) {
         doc.text(String(c + 1), startX + c * cellSize + cellSize / 2 - 2, startY - 3);
       }
 
-      // 孔位
+      // Wells
       wells.forEach((well) => {
         const x = startX + well.col * cellSize;
         const y = startY + well.row * cellSize;
@@ -115,8 +115,8 @@ export function DownloadPanel({ layout, sourcePlate }: DownloadPanelProps) {
   if (!layout) {
     return (
       <div className="download-panel disabled">
-        <h3>📥 下载</h3>
-        <p className="hint">生成布局后可下载</p>
+        <h3>📥 Download</h3>
+        <p className="hint">Available after layout generation</p>
       </div>
     );
   }
@@ -125,13 +125,13 @@ export function DownloadPanel({ layout, sourcePlate }: DownloadPanelProps) {
 
   return (
     <div className="download-panel">
-      <h3>📥 下载</h3>
+      <h3>📥 Download</h3>
       <div className="download-buttons">
         <button
           className="btn btn-download"
           onClick={downloadPicklist}
           disabled={isGenerating || !canDownloadPicklist}
-          title={!canDownloadPicklist ? '需要源板数据才能生成Picklist' : ''}
+          title={!canDownloadPicklist ? 'Source plate data required to generate Picklist' : ''}
         >
           📋 Picklist (CSV)
         </button>
@@ -140,21 +140,21 @@ export function DownloadPanel({ layout, sourcePlate }: DownloadPanelProps) {
           onClick={downloadJSON}
           disabled={isGenerating}
         >
-          📄 布局 (JSON)
+          📄 Layout (JSON)
         </button>
         <button
           className="btn btn-download"
           onClick={downloadPDF}
           disabled={isGenerating}
         >
-          📑 报告 (PDF)
+          📑 Report (PDF)
         </button>
       </div>
     </div>
   );
 }
 
-// 辅助函数
+// Helper functions
 function generateCSV(picklist: PicklistEntry[]): string {
   const headers = [
     'Source Barcode',

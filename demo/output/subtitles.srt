@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:10,224
+Welcome to Smart Campaign Designer, an AI-powered microplate layout design tool built on AWS. Let's start by signing in.
+
+2
+00:00:10,224 --> 00:00:19,027
+Now we upload our source plate Excel file. The system parses it and shows the plate ID, gene count, and well information.
+
+3
+00:00:19,027 --> 00:00:59,689
+Let's use the AI chat to design our first layout. We ask for a 96-well plate with 6 replicates per gene and 1 edge layer. Watch the AI generate the layout in real time.
+
+4
+00:00:59,689 --> 00:01:43,483
+For our second design, we upgrade to a 384-well plate with 8 replicates and 2 edge layers. The AI remembers context and redesigns accordingly.
+
+5
+00:01:43,483 --> 00:02:26,956
+Now a custom configuration: first 10 genes with 8 replicates, but Gene 25 gets 20 replicates for dose-response. The AI handles heterogeneous requirements effortlessly.
+
+6
+00:02:26,956 --> 00:02:33,961
+The plate view is fully interactive. We can drag and drop wells to fine-tune positions manually.
+
+7
+00:02:33,961 --> 00:02:40,555
+When ready, export as Picklist CSV for liquid handlers, JSON for programmatic use, or PDF report for documentation. Thank you for watching!
