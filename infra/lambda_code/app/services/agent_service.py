@@ -119,51 +119,99 @@ Rules:
             print(f"Warning: Could not initialize Bedrock client: {e}")
             self.client = None
 
+    def _fallback_extract_params(self, message: str) -> Optional[Dict]:
+        """Regex-based fallback for parameter extraction when AI is unavailable."""
+        params = {}
+        text = message
+
+        # Plate type: "384板", "96孔板", "1536-well plate", "384 well"
+        m = re.search(r'(96|384|1536)\s*[-]?\s*(?:well|孔板|孔|板子|板)', text, re.IGNORECASE)
+        if m:
+            params['plate_type'] = int(m.group(1))
+
+        # Replicates: "重复10次", "每个重复10次", "10 replicates", "10次重复", "每个10次"
+        chinese_num_map = {'一': 1, '二': 2, '两': 2, '三': 3, '四': 4, '五': 5,
+                           '六': 6, '七': 7, '八': 8, '九': 9, '十': 10}
+        m = (re.search(r'(?:重复|replicate[s]?)\s*(\d+)\s*(?:次|倍)?', text, re.IGNORECASE)
+             or re.search(r'(\d+)\s*(?:次重复|倍重复|replicate[s]?)', text, re.IGNORECASE)
+             or re.search(r'每[个只]?\s*(?:重复\s*)?(\d+)\s*(?:次|倍)', text))
+        if m:
+            params['default_replicates'] = int(m.group(1))
+
+        # Edge layers: "外圈两层留空", "外围2层", "2 edge layers empty"
+        m = (re.search(r'(?:外圈|外围|边缘|edge)\s*([一二两三四五\d]+)\s*(?:层|圈|layer)', text, re.IGNORECASE)
+             or re.search(r'([一二两三四五\d]+)\s*(?:edge)\s*layer', text, re.IGNORECASE))
+        if m:
+            val = m.group(1)
+            params['edge_empty_layers'] = chinese_num_map.get(val, int(val) if val.isdigit() else 1)
+
+        # Gene selection: "前20个基因", "first 20 genes"
+        m = re.search(r'(?:前|first)\s*(\d+)\s*(?:个\s*)?(?:基因|gene)', text, re.IGNORECASE)
+        if m:
+            params['gene_selection'] = {'type': 'first_n', 'count': int(m.group(1))}
+
+        # Transfer volume: "2ul", "2.5微升", "2500nl"
+        m = re.search(r'(\d+(?:\.\d+)?)\s*(?:ul|微升|μl)', text, re.IGNORECASE)
+        if m:
+            params['transfer_volume_nl'] = float(m.group(1)) * 1000
+        else:
+            m = re.search(r'(\d+(?:\.\d+)?)\s*(?:nl|纳升)', text, re.IGNORECASE)
+            if m:
+                params['transfer_volume_nl'] = float(m.group(1))
+
+        if params:
+            print(f"[Fallback] Regex extracted params: {json.dumps(params, ensure_ascii=False)}")
+            return params
+        return None
+
     async def extract_params_with_ai(
         self,
         message: str,
         available_genes: List[str]
     ) -> Dict:
-        """Use AI tool_use to extract structured parameters from natural language."""
+        """Use AI tool_use to extract structured parameters from natural language.
+        Falls back to regex parsing if AI is unavailable or fails."""
 
-        if not self.client:
-            return None
-
-        gene_list = ', '.join(available_genes[:20])
-        gene_suffix = '...' if len(available_genes) > 20 else ''
-        prompt = f"""User request: {message}
+        # Try AI extraction first
+        if self.client:
+            gene_list = ', '.join(available_genes[:20])
+            gene_suffix = '...' if len(available_genes) > 20 else ''
+            prompt = f"""User request: {message}
 
 Available genes (natural sort): {gene_list}{gene_suffix}
 Total: {len(available_genes)} genes.
 
 Extract the design parameters and call the tool."""
 
-        try:
-            response = self.client.invoke_model(
-                modelId=settings.bedrock_model_id,
-                body=json.dumps({
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": 1024,
-                    "system": self.PARAM_EXTRACTION_SYSTEM,
-                    "tools": [EXTRACT_PARAMS_TOOL],
-                    "tool_choice": {"type": "tool", "name": "extract_design_params"},
-                    "messages": [{"role": "user", "content": prompt}]
-                })
-            )
+            try:
+                response = self.client.invoke_model(
+                    modelId=settings.bedrock_model_id,
+                    body=json.dumps({
+                        "anthropic_version": "bedrock-2023-05-31",
+                        "max_tokens": 1024,
+                        "system": self.PARAM_EXTRACTION_SYSTEM,
+                        "tools": [EXTRACT_PARAMS_TOOL],
+                        "tool_choice": {"type": "tool", "name": "extract_design_params"},
+                        "messages": [{"role": "user", "content": prompt}]
+                    })
+                )
 
-            result = json.loads(response['body'].read())
+                result = json.loads(response['body'].read())
 
-            # Extract tool_use input from response
-            for block in result.get('content', []):
-                if block.get('type') == 'tool_use' and block.get('name') == 'extract_design_params':
-                    params = block['input']
-                    print(f"[AI] Extracted params: {json.dumps(params, ensure_ascii=False, indent=2)}")
-                    return params
+                for block in result.get('content', []):
+                    if block.get('type') == 'tool_use' and block.get('name') == 'extract_design_params':
+                        params = block['input']
+                        print(f"[AI] Extracted params: {json.dumps(params, ensure_ascii=False, indent=2)}")
+                        return params
 
-        except Exception as e:
-            print(f"[AI] Parameter extraction failed: {e}")
+                print("[AI] No tool_use block found in response")
 
-        return None
+            except Exception as e:
+                print(f"[AI] Parameter extraction failed: {e}")
+
+        # Fallback to regex extraction
+        print("[Fallback] Attempting regex-based parameter extraction")
+        return self._fallback_extract_params(message)
 
     def build_params_from_ai_result(
         self,
@@ -313,7 +361,8 @@ Extract the design parameters and call the tool."""
         intents = {
             'UPLOAD_FILE': ['上传', 'upload', '文件', 'file', 'excel', 'csv'],
             'DESIGN_PLATE': ['设计', 'design', '布局', 'layout', '基因', 'gene',
-                           '重复', 'replicate', '孔板', 'plate', 'well'],
+                           '重复', 'replicate', '孔板', 'plate', 'well',
+                           '板子', '留空', '外圈', '外围', '384', '1536'],
             'MODIFY_LAYOUT': ['修改', 'modify', '调整', 'adjust', '移动', 'move',
                             '交换', 'swap', '拖拽', 'drag'],
             'GENERATE_PICKLIST': ['生成', 'generate', 'picklist', '清单',

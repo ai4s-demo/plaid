@@ -290,7 +290,11 @@ class ConstraintSolver:
     # ------------------------------------------------------------------ #
 
     def _format_position(self, row: int, col: int) -> str:
-        return f"{chr(ord('A') + row)}{col + 1:02d}"
+        if row < 26:
+            row_label = chr(ord('A') + row)
+        else:
+            row_label = chr(ord('A') + (row // 26) - 1) + chr(ord('A') + (row % 26))
+        return f"{row_label}{col + 1:02d}"
 
     def _validate_layouts(self, layouts: List[PlateLayout]) -> List[ConstraintViolation]:
         violations = []
