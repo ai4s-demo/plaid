@@ -96,7 +96,27 @@ async def chat(request: ChatRequest):
 
                     gene_info = f"Selected {len(selected_genes)} genes"
 
-                    yield f"data: {json.dumps({'type': 'text', 'content': 'Parameters parsed, generating layout...'})}\n\n"
+                    # Capacity pre-check
+                    total_samples = sum(params.get_replicates_for_gene(g) for g in selected_genes)
+                    plate_dims = params.get_plate_dimensions()
+                    inner_rows = plate_dims[0] - 2 * params.edge_empty_layers
+                    inner_cols = plate_dims[1] - 2 * params.edge_empty_layers
+                    wells_per_plate = inner_rows * inner_cols
+
+                    if wells_per_plate <= 0:
+                        yield f"data: {json.dumps({'type': 'text', 'content': f'Error: edge_empty_layers={params.edge_empty_layers} leaves no usable wells on a {params.plate_type.value}-well plate.'}, ensure_ascii=False)}\n\n"
+                        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                        return
+
+                    import math
+                    needed_plates = math.ceil(total_samples / wells_per_plate)
+
+                    if needed_plates > 1:
+                        capacity_msg = f'Parameters parsed. Note: {total_samples} samples > {wells_per_plate} wells/plate ({params.plate_type.value}-well, {params.edge_empty_layers} edge layers), will use {needed_plates} plates. Generating layout...'
+                    else:
+                        capacity_msg = 'Parameters parsed, generating layout...'
+
+                    yield f"data: {json.dumps({'type': 'text', 'content': capacity_msg}, ensure_ascii=False)}\n\n"
                     await asyncio.sleep(0)
                     
                     source_plate = SourcePlate(
@@ -172,9 +192,9 @@ async def chat(request: ChatRequest):
                                 yield f"data: {json.dumps({'type': 'layouts', 'content': frontend_layouts}, ensure_ascii=False)}\n\n"
                                 await asyncio.sleep(0)
 
-                            plate_info = f"{params.plate_type.value}孔板"
+                            plate_info = f"{params.plate_type.value}-well plate"
 
-                            total_samples = sum(params.get_replicates_for_gene(g) for g in selected_genes)
+                            total_samples_final = sum(params.get_replicates_for_gene(g) for g in selected_genes)
 
                             if params.gene_configs:
                                 special_configs = [f"{g}({c.replicates}x)" for g, c in params.gene_configs.items()]
@@ -183,8 +203,11 @@ async def chat(request: ChatRequest):
                                 config_detail = ""
 
                             num_plates = len(frontend_layouts)
-                            plate_count_info = f", {num_plates} plates" if num_plates > 1 else ""
-                            msg = f'\n\nLayout generated! {gene_info}, {params.replicates} replicates each{config_detail}, {total_samples} total samples, {plate_info}{plate_count_info}.'
+                            if num_plates > 1:
+                                plate_count_info = f". Spread across **{num_plates} plates** ({wells_per_plate} wells/plate). Use the plate selector to switch between plates."
+                            else:
+                                plate_count_info = ""
+                            msg = f'\n\nLayout generated! {gene_info}, {params.replicates} replicates each{config_detail}, {total_samples_final} total samples, {plate_info}{plate_count_info}.'
                             yield f"data: {json.dumps({'type': 'text', 'content': msg})}\n\n"
                         else:
                             yield f"data: {json.dumps({'type': 'text', 'content': 'Layout generation failed. Please check parameters.'})}\n\n"
