@@ -31,6 +31,7 @@ export interface PlateLayout {
   plateFormat: 96 | 384 | 1536;
   plateIndex?: number;
   plateBarcode?: string;
+  totalPlates?: number;
   wells: LayoutWell[];
   violations: ConstraintViolation[];
   score: number;

@@ -87,17 +87,24 @@ export function useChat() {
           ),
         }));
       },
-      // onLayout - attach layout to the current assistant message
+      // onLayout - accumulate plates (backend sends each plate as separate event)
       (layout) => {
-        setState((prev) => ({
-          ...prev,
-          currentLayout: layout,
-          allLayouts: [layout],
-          currentPlateIndex: 0,
-          messages: prev.messages.map((m) =>
-            m.id === assistantId ? { ...m, layout } : m
-          ),
-        }));
+        setState((prev) => {
+          const idx = layout.plateIndex ?? 0;
+          const newLayouts = [...prev.allLayouts];
+          newLayouts[idx] = layout;
+          return {
+            ...prev,
+            currentLayout: idx === 0 ? layout : prev.currentLayout,
+            allLayouts: newLayouts,
+            currentPlateIndex: idx === 0 ? 0 : prev.currentPlateIndex,
+            messages: prev.messages.map((m) =>
+              m.id === assistantId
+                ? { ...m, layout: idx === 0 ? layout : m.layout, layouts: newLayouts }
+                : m
+            ),
+          };
+        });
       },
       // onError
       (error) => {

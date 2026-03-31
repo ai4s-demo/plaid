@@ -183,13 +183,11 @@ async def chat(request: ChatRequest):
                                 }
                                 frontend_layouts.append(frontend_layout)
 
-                            # Send first layout for backward compatibility
-                            yield f"data: {json.dumps({'type': 'layout', 'content': frontend_layouts[0]}, ensure_ascii=False)}\n\n"
-                            await asyncio.sleep(0)
-
-                            # Send all layouts if multiple plates
-                            if len(frontend_layouts) > 1:
-                                yield f"data: {json.dumps({'type': 'layouts', 'content': frontend_layouts}, ensure_ascii=False)}\n\n"
+                            # Send each plate as a separate event
+                            total_plates = len(frontend_layouts)
+                            for fl in frontend_layouts:
+                                fl['totalPlates'] = total_plates
+                                yield f"data: {json.dumps({'type': 'layout', 'content': fl}, ensure_ascii=False)}\n\n"
                                 await asyncio.sleep(0)
 
                             plate_info = f"{params.plate_type.value}-well plate"
